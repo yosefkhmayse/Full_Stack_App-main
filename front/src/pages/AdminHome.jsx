@@ -53,7 +53,7 @@ const AdminHome = () => {
             </Sidebar>
             <MainContent>
                 <Header>
-                    <LibraryName>📚 ספריית כנרת</LibraryName>
+                    <LibraryName>📚 ספרייה</LibraryName>
                 </Header>
                 <BookList>
                     {books.map(book => (

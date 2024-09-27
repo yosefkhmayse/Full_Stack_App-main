@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-
+import { Link } from 'react-router-dom';
 const EditUser = () => {
     const { id } = useParams();
     const [user, setUser] = useState(null);
@@ -50,6 +50,9 @@ const EditUser = () => {
     return (
         <PageContainer>
             <ContentBox>
+            <Link to="/users">
+        <HomeButton> חזור  </HomeButton>
+      </Link>
                 <Header>עריכת פרטי משתמש ✏️</Header>
                 {error && <ErrorMessage>{error}</ErrorMessage>} {/* Display error message */}
                 <Form onSubmit={handleSubmit}>
@@ -168,7 +171,20 @@ const SubmitButton = styled.button`
         background-color: #0088cc;
     }
 `;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
 
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
 const ErrorMessage = styled.p`
     color: red;
     text-align: center;

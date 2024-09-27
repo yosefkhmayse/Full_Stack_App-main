@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
 const EditLoan = () => {
     const { id } = useParams();
     const [loan, setLoan] = useState(null);
@@ -35,6 +36,9 @@ const EditLoan = () => {
     return (
         <div style={outerContainerStyle}>
             <div style={containerStyle}>
+            <Link to="/loans">
+        <HomeButton> חזור  </HomeButton>
+      </Link>
                 <h1 style={headerStyle}>ערוך השאלה 📚</h1>
                 <form onSubmit={handleSubmit} style={formStyle}>
                     <div style={inputGroupStyle}>
@@ -118,6 +122,20 @@ const outerContainerStyle = {
     backgroundColor: '#f4f4f4'
 };
 
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
 const containerStyle = {
     padding: '20px',
     fontFamily: 'Arial, sans-serif',

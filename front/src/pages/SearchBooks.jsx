@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 
+
 const Container = styled.div`
     display: flex;
     justify-content: center;
@@ -26,7 +27,7 @@ const Box = styled.div`
 
 const Title = styled.h2`
     margin-bottom: 20px;
-    color: #388e3c;
+    color: black;
     font-size: 2em;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 `;
@@ -41,7 +42,7 @@ const Input = styled.input`
     transition: border-color 0.3s;
 
     &:focus {
-        border-color: #388e3c;
+        border-color:#279af9;
         outline: none;
     }
 `;
@@ -49,7 +50,7 @@ const Input = styled.input`
 const Button = styled.button`
     padding: 12px 25px;
     cursor: pointer;
-    background-color: #388e3c;
+    background-color: #279af9;
     color: white;
     border: none;
     border-radius: 5px;
@@ -58,7 +59,7 @@ const Button = styled.button`
     transition: background-color 0.3s;
 
     &:hover {
-        background-color: #2e7d32;
+        background-color: #0f1e66;
     }
 `;
 
@@ -104,7 +105,20 @@ const StyledLink = styled(Link)`
     outline: none; // Remove focus outline
     color: inherit; // Inherit color for text
 `;
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
 
+    &:hover {
+        background-color: #0f1e66;
+    }
+`;
 const SearchBooks = () => {
     const [title, setTitle] = useState('');
     const [results, setResults] = useState([]);
@@ -137,6 +151,9 @@ const SearchBooks = () => {
     return (
         <Container>
             <Box>
+            <Link to="/userhome">
+                <HomeButton>🏠 חזור לדף הבית</HomeButton>
+            </Link>
                 <Title>חפש ספר לפי שם 📚</Title>
                 <Input 
                     type="text" 

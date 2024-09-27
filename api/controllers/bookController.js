@@ -100,53 +100,117 @@ export const addBook = (req, res) => {
   );
 };
 
-// Delete a book by ID
 export const deleteBook = (req, res) => {
   const { id } = req.params;
-  db.query('DELETE FROM books WHERE id = ?', [id], (err) => {
-      if (err) {
-          console.error('Delete query error:', err.message);
-          return res.status(500).json({ error: 'Server error: ' + err.message });
-      }
-      res.status(204).send();
-  });
-};
 
-
-// Update a book by ID
-export const updateBook = (req, res) => {
-  const { id } = req.params;
-  const { title, author, year, description, available, genre } = req.body;
-  const image = req.file ? req.file.filename : null;
-
-  const isAvailable = available === 'true'; // Convert to boolean
-
-  let query = 'UPDATE books SET title = ?, author = ?, year = ?, description = ?, available = ?, genre = ?';
-  let queryParams = [title, author, year, description, isAvailable ? 1 : 0, genre];
-
-  if (image) {
-    query += ', image = ?';
-    queryParams.push(image);
-  }
-
-  query += ' WHERE id = ?';
-  queryParams.push(id);
-
-  db.query(query, queryParams, (err) => {
+  // Check if the book exists
+  db.query('SELECT * FROM books WHERE id = ?', [id], (err, results) => {
     if (err) {
-      console.error('Query error:', err.message);
+      console.error('Error executing query:', err.message);
       return res.status(500).json({ error: 'Server error: ' + err.message });
     }
-    res.status(200).json({
-      id,
-      title,
-      author,
-      year,
-      image,
-      description,
-      available: isAvailable,
-      genre
+
+    // If no book is found, send a 404 error
+    if (results.length === 0) {
+      return res.status(404).json({ error: '❌ הספר לא נמצא.' });
+    }
+
+    // Check if the book is associated with any categories
+    db.query('SELECT * FROM categories WHERE book_id = ?', [id], (err, categoryResults) => {
+      if (err) {
+        console.error('Error executing category check query:', err.message);
+        return res.status(500).json({ error: 'Server error: ' + err.message });
+      }
+
+      // If the book is associated with categories, prevent deletion
+      if (categoryResults.length > 0) {
+        return res.status(400).json({ error: '⚠️ לא ניתן למחוק ספר שיש לו קטגוריות.' });
+      }
+
+      // Proceed to soft delete the book
+      db.query('UPDATE books SET is_deleted = 1 WHERE id = ?', [id], (err) => {
+        if (err) {
+          console.error('Error executing soft delete query:', err.message);
+          return res.status(500).json({ error: 'Server error: ' + err.message });
+        }
+        res.status(204).send();
+      });
     });
   });
 };
+export const updateBook = (req, res) => {
+  const { id } = req.params;
+  const { title, author, year, description, available, genre } = req.body;
 
+  // Convert available to a boolean if it’s a string
+  const isAvailable = (available === 'true' || available === true) ? 1 : 0; 
+
+  const image = req.file ? req.file.filename : null;
+
+  console.log('Incoming request data:', { title, author, year, description, available, genre, image });
+
+  // Construct the base query
+  let query = 'UPDATE books SET title = ?, author = ?, year = ?, description = ?, available = ?, genre = ?';
+  let queryParams = [title, author, year, description, isAvailable, genre];
+
+  // Include image in query if it exists
+  if (image) {
+      query += ', image = ?';
+      queryParams.push(image);
+  }
+
+  // Specify the book to update
+  query += ' WHERE id = ?';
+  queryParams.push(id);
+
+  console.log('Executing query:', query, 'with params:', queryParams);
+
+  // Execute the query
+  db.query(query, queryParams, (err) => {
+      if (err) {
+          console.error('Error executing query:', err.message);
+          return res.status(500).json({ error: 'Server error: ' + err.message });
+      }
+
+      // Respond with the updated book data
+      res.status(200).json({
+          id,
+          title,
+          author,
+          year,
+          image,
+          description,
+          available: !!isAvailable, // Ensure it's boolean in the response
+          genre
+      });
+  });
+};
+
+export const searchBooks = (req, res) => {
+  const { query, category } = req.query;
+  let sql = 'SELECT books.*, categories.name as category_name FROM books LEFT JOIN categories ON books.category_id = categories.id WHERE 1=1';
+  const params = [];
+
+  if (query) {
+      sql += ' AND books.title LIKE ?';
+      params.push(`%${query}%`);
+  }
+
+  if (category) {
+      sql += ' AND books.category_id = ?';
+      params.push(category);
+  }
+
+  console.log('Executing SQL:', sql);  // Log the SQL query
+  console.log('With parameters:', params); // Log the parameters
+
+  db.query(sql, params, (err, results) => {
+      if (err) {
+          console.error('Error executing query:', err.message); // Log the error message
+          return res.status(500).json({ error: 'Error searching books: ' + err.message });
+      }
+
+      results.forEach(setImagePath);
+      res.status(200).json(results);
+  });
+};

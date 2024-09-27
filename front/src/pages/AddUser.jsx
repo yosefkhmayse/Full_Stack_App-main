@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const AddUser = () => {
     const [username, setUsername] = useState('');
@@ -30,6 +31,9 @@ const AddUser = () => {
     return (
         <PageContainer>
             <ContentBox>
+            <Link to="/users">
+        <HomeButton> חזור  </HomeButton>
+      </Link>
                 <Header>הוסף משתמש חדש 🆕</Header>
                 {error && <ErrorMessage>{error}</ErrorMessage>} {/* Display error message */}
                 <Form onSubmit={handleSubmit}>
@@ -88,7 +92,20 @@ const PageContainer = styled.div`
     height: 100vh;
     background-color: #f0f0f0;
 `;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
 
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
 const ContentBox = styled.div`
     width: 100%;
     max-width: 500px;

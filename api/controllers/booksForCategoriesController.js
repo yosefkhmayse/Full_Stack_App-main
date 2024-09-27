@@ -9,22 +9,31 @@ export const getBooksForCategories = (req, res) => {
 };
 
 // הוספת ספר לקטגוריה
+// הוספת ספר לקטגוריה
 export const addBooksForCategory = (req, res) => {
     const { book_id, category_id } = req.body;
-    console.log(req.body); // רישום תוכן הבקשה
 
-    // בדיקת קיום ספר בקטגוריה
-    db.query('SELECT * FROM books_for_category WHERE book_id = ? AND category_id = ?', [book_id, category_id], (err, results) => {
+    // בדיקת קיום הספר בבסיס הנתונים
+    db.query('SELECT * FROM books WHERE id = ?', [book_id], (err, results) => {
         if (err) return res.status(500).json({ error: 'שגיאה בבסיס הנתונים', details: err.message });
 
-        if (results.length > 0) {
-            return res.status(400).json({ error: 'הספר כבר נמצא בקטגוריה' });
-        } 
+        if (results.length === 0) {
+            return res.status(400).json({ error: 'הספר לא נמצא במערכת, אנא בדוק את הקוד והכנס ספר קיים' });
+        }
 
-        // הוספת ספר לקטגוריה אם לא קיים
-        db.query('INSERT INTO books_for_category (book_id, category_id) VALUES (?, ?)', [book_id, category_id], (err) => {
+        // בדיקת קיום ספר בקטגוריה
+        db.query('SELECT * FROM books_for_category WHERE book_id = ? AND category_id = ?', [book_id, category_id], (err, results) => {
             if (err) return res.status(500).json({ error: 'שגיאה בבסיס הנתונים', details: err.message });
-            res.status(201).json({ message: 'ספר לקטגוריה נוסף בהצלחה' });
+
+            if (results.length > 0) {
+                return res.status(400).json({ error: 'הספר כבר נמצא בקטגוריה' });
+            }
+
+            // הוספת ספר לקטגוריה אם לא קיים
+            db.query('INSERT INTO books_for_category (book_id, category_id) VALUES (?, ?)', [book_id, category_id], (err) => {
+                if (err) return res.status(500).json({ error: 'שגיאה בבסיס הנתונים', details: err.message });
+                res.status(201).json({ message: 'ספר לקטגוריה נוסף בהצלחה' });
+            });
         });
     });
 };

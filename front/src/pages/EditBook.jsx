@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 const EditBook = () => {
   const { id } = useParams();
   const [book, setBook] = useState(null);
-  const [newImage, setNewImage] = useState(null); // State for new image
+  const [newImage, setNewImage] = useState(null);
+  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch book details by ID
-    axios.get(`/books/${id}`)
-      .then(response => setBook(response.data))
-      .catch(error => console.error('שגיאה בטעינת פרטי הספר 🛑:', error));
+    const fetchBookData = async () => {
+      try {
+        const response = await axios.get(`/books/search/${id}`);
+        setBook(response.data);
+      } catch (error) {
+        console.error('שגיאה בטעינת פרטי הספר 🛑:', error);
+        setMessage('❌ הספר לא נמצא או שיש שגיאה בטעינה.');
+      }
+    };
+    
+    fetchBookData();
   }, [id]);
 
   const handleChange = (e) => {
@@ -30,6 +38,8 @@ const EditBook = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!book) return; // Ensure book is not null
 
     const formData = new FormData();
     formData.append('title', book.title);
@@ -50,9 +60,11 @@ const EditBook = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
+      setMessage('✅ הספר עודכן בהצלחה!'); // Success message
       navigate('/books');
     } catch (error) {
       console.error('שגיאה בעדכון הספר 🛑:', error);
+      setMessage('⚠️ שגיאה בעדכון הספר.');
     }
   };
 
@@ -62,13 +74,14 @@ const EditBook = () => {
     <PageContainer>
       <ContentBox>
         <Header>ערוך ספר 📚</Header>
+        {message && <Message>{message}</Message>}
         <Form onSubmit={handleSubmit}>
           <Label>
             שם הספר:
             <Input
               type="text"
               name="title"
-              value={book.title}
+              value={book.title} // Use value for controlled input
               onChange={handleChange}
               required
             />
@@ -78,7 +91,7 @@ const EditBook = () => {
             <Input
               type="text"
               name="author"
-              value={book.author}
+              value={book.author} // Use value for controlled input
               onChange={handleChange}
               required
             />
@@ -97,7 +110,7 @@ const EditBook = () => {
             <Input
               type="text"
               name="year"
-              value={book.year}
+              value={book.year} // Use value for controlled input
               onChange={handleChange}
             />
           </Label>
@@ -106,24 +119,16 @@ const EditBook = () => {
             <Input
               type="text"
               name="genre"
-              value={book.genre}
+              value={book.genre} // Use value for controlled input
               onChange={handleChange}
             />
           </Label>
-          <Label>
-            דירוג:
-            <Input
-              type="number"
-              name="rating"
-              value={book.rating}
-              onChange={handleChange}
-            />
-          </Label>
+   
           <Label>
             תיאור:
             <Textarea
               name="description"
-              value={book.description}
+              value={book.description} // Use value for controlled input
               onChange={handleChange}
             />
           </Label>
@@ -143,6 +148,7 @@ const EditBook = () => {
           </Label>
           <SubmitButton type="submit">עדכן ספר 🔄</SubmitButton>
         </Form>
+        <Link to="/adminhome">🏠 חזור לדף הבית</Link>
       </ContentBox>
     </PageContainer>
   );
@@ -174,6 +180,11 @@ const Header = styled.h1`
     font-size: 1.5em; /* Reduced font size */
     color: #333;
     margin-bottom: 15px; /* Reduced bottom margin */
+`;
+
+const Message = styled.p`
+    color: #d32f2f; /* Red for error messages */
+    margin: 10px 0; /* Space around message */
 `;
 
 const Form = styled.form`

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const AddAdmin = () => {
     const [username, setUsername] = useState('');
@@ -29,6 +30,9 @@ const AddAdmin = () => {
     return (
         <PageContainer>
             <Container>
+            <Link to="/admins">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link>
                 <Title>➕ הוסף מנהל חדש</Title>
                 <Form onSubmit={handleSubmit}>
                     {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -97,7 +101,20 @@ const Container = styled.div`
     max-width: 600px;
     width: 100%;
 `;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
 
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
 const Title = styled.h1`
     font-size: 2em;
     color: #333;
@@ -127,7 +144,7 @@ const Input = styled.input`
 
 const SubmitButton = styled.button`
     padding: 15px;
-    background-color: #28a745;
+    background-color: #279af9;
     color: white;
     border: none;
     border-radius: 5px;
@@ -136,7 +153,7 @@ const SubmitButton = styled.button`
     transition: background-color 0.3s;
 
     &:hover {
-        background-color: #218838;
+        background-color: blue;
     }
 
     &:focus {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const BooksForCategory = () => {
     const [categories, setCategories] = useState([]);
@@ -82,13 +83,14 @@ const BooksForCategory = () => {
         }
     };
     
-    const editBook = (bookId) => {
-        // Navigate to a book edit page (assumes a route exists)
-        window.location.href = `/edit-book/${bookId}`;
-    };
+  
+
 
     return (
         <PageContainer>
+                   <Link to="/adminhome">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link>
             <Header>📚 ניהול ספרים לפי קטגוריה</Header>
             {loading && <Loading>טוען...</Loading>}
 
@@ -130,7 +132,7 @@ const BooksForCategory = () => {
                                 <span>מזהה ספר: {book.id}</span>
                                 <span>כותר: {book.title}</span>
                                 <BookActions>
-                                    <EditButton onClick={() => editBook(book.id)}>ערוך ✏️</EditButton>
+           
                                     <DeleteButton onClick={() => deleteBookFromCategory(book.id)}>מחק 🗑️</DeleteButton>
                                 </BookActions>
                             </BookItem>
@@ -157,6 +159,20 @@ const PageContainer = styled.div`
     background-color: #f4f4f4;
     border-radius: 8px;
     border: 1px solid #ddd;
+`;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
 `;
 
 const Header = styled.h1`
@@ -237,18 +253,7 @@ const BookActions = styled.div`
     gap: 10px;
 `;
 
-const EditButton = styled.button`
-    padding: 5px 10px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 
-    &:hover {
-        background-color: #218838;
-    }
-`;
 
 const DeleteButton = styled.button`
     padding: 5px 10px;

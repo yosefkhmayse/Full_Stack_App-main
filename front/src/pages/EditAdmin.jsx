@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const EditAdmin = () => {
     const { id } = useParams();
@@ -60,6 +61,9 @@ const EditAdmin = () => {
     return (
         <PageContainer>
             <Container>
+            <Link to="/admins">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link>
                 <Title>✏️ ערוך מנהל</Title>
                 <Form onSubmit={handleSubmit}>
                     {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -118,7 +122,20 @@ const PageContainer = styled.div`
     height: 100vh;
     background-color: #f0f0f0;
 `;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
 
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
 const Container = styled.div`
     padding: 20px;
     background-color: #f9f9f9;
@@ -161,7 +178,7 @@ const Input = styled.input`
 
 const SubmitButton = styled.button`
     padding: 15px;
-    background-color: #28a745;
+    background-color: #279af9;
     color: white;
     border: none;
     border-radius: 5px;
@@ -170,7 +187,7 @@ const SubmitButton = styled.button`
     transition: background-color 0.3s;
 
     &:hover {
-        background-color: #218838;
+        background-color:blue;
     }
 
     &:focus {

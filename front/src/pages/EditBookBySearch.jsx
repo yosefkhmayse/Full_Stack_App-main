@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const Container = styled.div`
     display: flex;
@@ -42,6 +43,11 @@ const Input = styled.input`
     width: 90%; /* Full width of the list item */
     font-size: 16px;
     color: black; /* Font color set to black */
+    transition: border-color 0.3s;
+
+    &:hover {
+        border-color: #00695c; /* Change border color on hover */
+    }
 `;
 
 const TextArea = styled.textarea`
@@ -51,6 +57,26 @@ const TextArea = styled.textarea`
     width: 90%; /* Full width of the list item */
     font-size: 16px;
     color: black; /* Font color set to black */
+    transition: border-color 0.3s;
+
+    &:hover {
+        border-color: #00695c; /* Change border color on hover */
+    }
+`;
+
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
+    }
 `;
 
 const Button = styled.button`
@@ -64,7 +90,7 @@ const Button = styled.button`
     margin-top: 10px;
 
     &:hover {
-        background-color: #00aaff; 
+        background-color: #0088cc; /* Darker shade on hover */
     }
 `;
 
@@ -72,37 +98,82 @@ const Message = styled.p`
     color: #d32f2f; /* Red for error messages */
 `;
 
+const ImagePreview = styled.img`
+    max-width: 100%; /* Make sure the image fits within the container */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 5px; /* Optional: add border-radius for aesthetics */
+    margin-bottom: 10px; /* Space below the image */
+`;
+
 const EditBookBySearch = () => {
     const [bookId, setBookId] = useState('');
-    const [bookData, setBookData] = useState({ title: '', author: '', year: '', description: '', available: false, genre: '' });
+    const [bookData, setBookData] = useState({ title: '', author: '', year: '', description: '', available: false, genre: '', image: '' });
     const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setBookData({ ...bookData, [name]: value });
+        const { name, value, type, checked } = e.target;
+        if (type === 'checkbox') {
+            // Update available state properly
+            setBookData({ ...bookData, [name]: checked });
+        } else {
+            // Handle other input types
+            setBookData({ ...bookData, [name]: value });
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBookData({ ...bookData, image: file });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
         if (!bookId) {
             setMessage('🛑 אנא הזן את מזהה הספר.');
             return;
         }
-
+    
         try {
-            setMessage(`📚 הספר עם מזהה ${bookId} עודכן.`);
-            setBookData({ title: '', author: '', year: '', description: '', available: false, genre: '' });
-            setBookId('');
+            setLoading(true); // Set loading to true
+            const formData = new FormData();
+            Object.keys(bookData).forEach(key => {
+                // Ensure all values are correctly appended to FormData
+                if (key === 'available') {
+                    formData.append(key, bookData[key] ? 'true' : 'false'); // Send as string for the backend
+                } else {
+                    formData.append(key, bookData[key]);
+                }
+            });
+
+            const response = await axios.put(`/books/${bookId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+    
+            if (response.status === 200) {
+                setMessage(`📚 הספר עם מזהה ${bookId} עודכן בהצלחה.`);
+                // Clear the form after successful update
+                setBookData({ title: '', author: '', year: '', description: '', available: false, genre: '', image: '' });
+                setBookId(''); // Clear book ID
+            }
         } catch (error) {
             if (error.response && error.response.status === 404) {
                 setMessage('❌ הספר לא נמצא.');
             } else {
                 setMessage(`⚠️ שגיאה בעדכון הספר: ${error.message}`);
             }
+        } finally {
+            setLoading(false); // Set loading to false
         }
     };
-
+    
     const fetchBookData = async (id) => {
+        setLoading(true); // Set loading to true
         try {
             const response = await axios.get(`/books/search/${id}`);
             setBookData(response.data);
@@ -112,6 +183,8 @@ const EditBookBySearch = () => {
             } else {
                 setMessage(`⚠️ שגיאה בטעינת נתוני הספר: ${error.message}`);
             }
+        } finally {
+            setLoading(false); // Set loading to false
         }
     };
 
@@ -124,6 +197,9 @@ const EditBookBySearch = () => {
     return (
         <Container>
             <Box>
+                <Link to="/adminhome">
+                    <HomeButton>🏠 חזור לדף הבית</HomeButton>
+                </Link> <br />
                 <Title>ערוך ספר לפי מזהה ✏️</Title>
                 <Input 
                     type="text" 
@@ -133,6 +209,11 @@ const EditBookBySearch = () => {
                 />
                 <form onSubmit={handleSubmit}>
                     <InputList>
+                        {bookData.image && (
+                            <InputItem>
+                                <ImagePreview src={bookData.image} alt="Current Book" />
+                            </InputItem>
+                        )}
                         <InputItem>
                             <Input 
                                 type="text" 
@@ -178,13 +259,21 @@ const EditBookBySearch = () => {
                                     type="checkbox" 
                                     name="available" 
                                     checked={bookData.available} 
-                                    onChange={(e) => setBookData({ ...bookData, available: e.target.checked })} 
+                                    onChange={handleChange} 
                                 />
                             </label>
                         </InputItem>
+                        <InputItem>
+                            <Input 
+                                type="file" 
+                                name="image" 
+                                accept="image/*" 
+                                onChange={handleFileChange} 
+                            />
+                        </InputItem>
                     </InputList>
-                    <Button type="submit">
-                        עדכן ספר 📚
+                    <Button type="submit" disabled={loading}>
+                        {loading ? 'טוען...' : 'עדכן ספר 📚'}
                     </Button>
                 </form>
                 {message && <Message>{message}</Message>}
