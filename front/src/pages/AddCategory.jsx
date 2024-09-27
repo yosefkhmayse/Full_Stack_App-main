@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const AddCategory = () => {
     const [name, setName] = useState('');
@@ -17,6 +18,9 @@ const AddCategory = () => {
     return (
         <PageContainer>
             <FormContainer>
+            <Link to="/categories">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link>
                 <Title>➕ הוסף קטגוריה חדשה</Title>
                 <Form onSubmit={handleSubmit}>
                     <Label>
@@ -45,6 +49,20 @@ const PageContainer = styled.div`
     align-items: center;
     height: 100vh;
     background-color: #f0f0f0;
+`;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
 `;
 
 const FormContainer = styled.div`

@@ -100,6 +100,7 @@ export const addBook = (req, res) => {
   );
 };
 
+// Delete a book by ID
 export const deleteBook = (req, res) => {
   const { id } = req.params;
 
@@ -115,29 +116,17 @@ export const deleteBook = (req, res) => {
       return res.status(404).json({ error: '❌ הספר לא נמצא.' });
     }
 
-    // Check if the book is associated with any categories
-    db.query('SELECT * FROM categories WHERE book_id = ?', [id], (err, categoryResults) => {
+    // Proceed to delete the book
+    db.query('DELETE FROM books WHERE id = ?', [id], (err) => {
       if (err) {
-        console.error('Error executing category check query:', err.message);
+        console.error('Error executing delete query:', err.message);
         return res.status(500).json({ error: 'Server error: ' + err.message });
       }
-
-      // If the book is associated with categories, prevent deletion
-      if (categoryResults.length > 0) {
-        return res.status(400).json({ error: '⚠️ לא ניתן למחוק ספר שיש לו קטגוריות.' });
-      }
-
-      // Proceed to soft delete the book
-      db.query('UPDATE books SET is_deleted = 1 WHERE id = ?', [id], (err) => {
-        if (err) {
-          console.error('Error executing soft delete query:', err.message);
-          return res.status(500).json({ error: 'Server error: ' + err.message });
-        }
-        res.status(204).send();
-      });
+      res.status(204).send();
     });
   });
 };
+
 export const updateBook = (req, res) => {
   const { id } = req.params;
   const { title, author, year, description, available, genre } = req.body;

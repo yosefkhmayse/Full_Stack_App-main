@@ -73,6 +73,9 @@ const EditBook = () => {
   return (
     <PageContainer>
       <ContentBox>
+      <Link to="/adminhome">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link> <br />
         <Header>ערוך ספר 📚</Header>
         {message && <Message>{message}</Message>}
         <Form onSubmit={handleSubmit}>
@@ -148,7 +151,7 @@ const EditBook = () => {
           </Label>
           <SubmitButton type="submit">עדכן ספר 🔄</SubmitButton>
         </Form>
-        <Link to="/adminhome">🏠 חזור לדף הבית</Link>
+       
       </ContentBox>
     </PageContainer>
   );
@@ -174,6 +177,20 @@ const ContentBox = styled.div`
     padding: 20px; /* Reduced padding */
     text-align: center;
     margin-top: 20px; /* Reduced top margin */
+`;
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
 `;
 
 const Header = styled.h1`
