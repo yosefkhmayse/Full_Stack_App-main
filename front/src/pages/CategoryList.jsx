@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+
 const CategoryList = () => {
     const [categories, setCategories] = useState([]);
 
@@ -21,6 +22,9 @@ const CategoryList = () => {
     return (
         <PageContainer>
             <ContentBox>
+            <Link to="/adminhome">
+                    <HomeButton>🏠 חזור לדף הבית</HomeButton>
+                </Link>
                 <Header>📚 רשימת קטגוריות</Header>
                 <AddCategoryLink to="/add-category">➕ הוסף קטגוריה חדשה</AddCategoryLink>
                 <CategoryListContainer>
@@ -40,7 +44,20 @@ const CategoryList = () => {
 };
 
 export default CategoryList;
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
 
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
+    }
+`;
 // רכיבים מעוצבים
 const PageContainer = styled.div`
     display: flex;

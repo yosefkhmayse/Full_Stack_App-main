@@ -94,16 +94,36 @@ export const userRegister = async (req, res) => {
     }
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        db.query('INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)', 
-            [username, hashedPassword, email, 'user'], 
-            (err) => {
-                if (err) return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
-                console.log('רישום משתמש הצליח');
-                res.status(201).json({ message: 'המשתמש נרשם בהצלחה' });
+        // Check if the username already exists
+        db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) => {
+            if (err) {
+                console.error('שגיאה בבסיס הנתונים:', err);
+                return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
             }
-        );
+
+            if (results.length > 0) {
+                return res.status(409).json({ error: 'שם המשתמש כבר קיים' }); // Conflict error
+            }
+
+            // Hash the password
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Insert new user into the database
+            db.query('INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)', 
+                [username, hashedPassword, email, 'user'], 
+                (err) => {
+                    if (err) {
+                        console.error('שגיאה בבסיס הנתונים בעת הוספת משתמש:', err);
+                        return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+                    }
+                    console.log('רישום משתמש הצליח');
+                    res.status(201).json({ message: 'המשתמש נרשם בהצלחה' });
+                }
+            );
+        });
     } catch (error) {
+        console.error('שגיאה בשרת:', error);
         res.status(500).json({ error: 'שגיאה בשרת' });
     }
 };
+

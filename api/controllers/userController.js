@@ -38,24 +38,37 @@ export const getUserById = (req, res) => {
 
 // הוספת משתמש חדש
 export const addUser = (req, res) => {
-    const { username, password, email, role } = req.body;
-    console.log('Adding user:', { username, email, role });
+    const { username, password, email, role = 'user' } = req.body; // Default role as 'user'
+    console.log('Attempting to add user:', { username, email, role });
 
-    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+    // Check if the username already exists
+    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
         if (err) {
-            console.error('Error hashing password:', err);
-            return res.status(500).json({ error: 'שגיאה בהצפנת הסיסמה' });
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+        }
+        if (results.length > 0) {
+            return res.status(409).json({ error: 'שם המשתמש כבר קיים' }); // Conflict error
         }
 
-        db.query('INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)', 
-        [username, hashedPassword, email, role], 
-        (err) => {
+        // Hash the password
+        bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
             if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+                console.error('Error hashing password:', err);
+                return res.status(500).json({ error: 'שגיאה בהצפנת הסיסמה' });
             }
-            console.log('User added successfully');
-            res.status(201).json({ message: 'המשתמש נוסף' });
+
+            // Insert new user into the database
+            db.query('INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)', 
+            [username, hashedPassword, email, role], 
+            (err) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+                }
+                console.log('User added successfully');
+                res.status(201).json({ message: 'המשתמש נוסף' });
+            });
         });
     });
 };
@@ -66,24 +79,36 @@ export const editUser = (req, res) => {
     const { username, password, email, role } = req.body;
     console.log('Updating user with ID:', id, { username, email, role });
 
-    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+    // Check if username already exists (excluding the current user)
+    db.query('SELECT * FROM users WHERE username = ? AND id != ?', [username, id], (err, results) => {
         if (err) {
-            console.error('Error hashing password:', err);
-            return res.status(500).json({ error: 'שגיאה בהצפנת הסיסמה' });
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+        }
+        if (results.length > 0) {
+            return res.status(409).json({ error: 'שם המשתמש כבר קיים' }); // Conflict error
         }
 
-        db.query('UPDATE users SET username = ?, password = ?, email = ?, role = ? WHERE id = ?', 
-        [username, hashedPassword, email, role, id], 
-        (err) => {
+        bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
             if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+                console.error('Error hashing password:', err);
+                return res.status(500).json({ error: 'שגיאה בהצפנת הסיסמה' });
             }
-            console.log('User updated successfully');
-            res.json({ message: 'המשתמש עודכן' });
+
+            db.query('UPDATE users SET username = ?, password = ?, email = ?, role = ? WHERE id = ?', 
+            [username, hashedPassword, email, role, id], 
+            (err) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+                }
+                console.log('User updated successfully');
+                res.json({ message: 'המשתמש עודכן' });
+            });
         });
     });
 };
+
 
 // מחיקת משתמש
 export const deleteUser = (req, res) => {
@@ -133,6 +158,57 @@ export const login = (req, res) => {
         });
     });
 };
+// שינוי סיסמה
+export const changePassword = (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id; // Assuming the user ID is set in the req object (e.g., from middleware)
+
+    console.log('Changing password for user ID:', userId);
+
+    // Fetch the user to verify the current password
+    db.query('SELECT * FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+        }
+        if (results.length === 0) {
+            console.log('User not found');
+            return res.status(404).json({ error: 'משתמש לא נמצא' });
+        }
+
+        const user = results[0];
+
+        // Compare the current password
+        bcrypt.compare(currentPassword, user.password, (err, match) => {
+            if (err) {
+                console.error('Error comparing passwords:', err);
+                return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+            }
+
+            if (!match) {
+                console.log('Current password is incorrect');
+                return res.status(400).json({ error: 'סיסמה נוכחית שגויה' });
+            }
+
+            // Hash the new password and update it in the database
+            bcrypt.hash(newPassword, saltRounds, (err, hashedNewPassword) => {
+                if (err) {
+                    console.error('Error hashing new password:', err);
+                    return res.status(500).json({ error: 'שגיאה בהצפנת הסיסמה' });
+                }
+
+                db.query('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, userId], (err) => {
+                    if (err) {
+                        console.error('Database error:', err);
+                        return res.status(500).json({ error: 'שגיאה בבסיס הנתונים' });
+                    }
+                    console.log('Password changed successfully');
+                    res.json({ message: 'הסיסמה שונתה בהצלחה' });
+                });
+            });
+        });
+    });
+};
 
 // קבלת פרטי משתמש
 export const getUserDetails = (req, res) => {
@@ -164,4 +240,5 @@ export const getUserDetails = (req, res) => {
             res.json({ username: results[0].username, id: decoded.id });
         });
     });
+    
 };

@@ -8,81 +8,88 @@ const BooksForCategory = () => {
     const [booksForCategory, setBooksForCategory] = useState([]);
     const [bookId, setBookId] = useState('');
     const [addError, setAddError] = useState('');
-    const [removeError, setRemoveError] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        setLoading(true);
-        axios.get('/categories')
-            .then(response => {
+        const fetchCategories = async () => {
+            setLoading(true);
+            try {
+                const response = await axios.get('/categories');
                 setCategories(response.data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            } finally {
                 setLoading(false);
-            })
-            .catch(error => {
-                console.error('שגיאה בטעינת הקטגוריות:', error);
-                setLoading(false);
-            });
+            }
+        };
+        fetchCategories();
     }, []);
 
     useEffect(() => {
-        if (selectedCategoryId) {
-            setLoading(true);
-            axios.get(`/books-for-categories/${selectedCategoryId}`)
-                .then(response => {
-                    setBooksForCategory(response.data);
+        const fetchBooksForCategory = async () => {
+            if (selectedCategoryId) {
+                setLoading(true);
+                try {
+                    const response = await axios.get(`/books-for-categories/${selectedCategoryId}`);
+                    setBooksForCategory(response.data.books);
+                } catch (error) {
+                    console.error('Error fetching books for category:', error);
+                } finally {
                     setLoading(false);
-                })
-                .catch(error => {
-                    console.error('שגיאה בטעינת ספרים עבור הקטגוריה:', error);
-                    setLoading(false);
-                });
-        }
+                }
+            } else {
+                setBooksForCategory([]); // Clear books if no category is selected
+            }
+        };
+        fetchBooksForCategory();
     }, [selectedCategoryId]);
 
-    const addBookToCategory = () => {
+    const addBookToCategory = async () => {
         if (!bookId || !selectedCategoryId) {
             setAddError('אנא הכנס מזהה ספר ובחר קטגוריה. 📚');
             return;
         }
         setLoading(true);
-        axios.post('/books-for-categories', { book_id: bookId, category_id: selectedCategoryId })
-            .then(() => {
-                setBooksForCategory(prevBooks => [...prevBooks, { book_id: bookId, category_id: selectedCategoryId }]);
-                setAddError('');
-                setLoading(false);
-            })
-            .catch(error => {
-                console.error('שגיאה בהוספת ספר לקטגוריה:', error);
-                setAddError(error.response?.data?.details || 'נכשל בהוספת ספר לקטגוריה. 😞');
-                setLoading(false);
-            });
-    };
-
-    const removeBookFromCategory = (bookId) => {
-        if (!selectedCategoryId) {
-            setRemoveError('לא נבחרה קטגוריה.');
-            return;
+        try {
+            await axios.post('/books-for-categories', { book_id: bookId, category_id: selectedCategoryId });
+            const response = await axios.get(`/books-for-categories/${selectedCategoryId}`);
+            setBooksForCategory(response.data.books);
+            setBookId(''); // Clear the input
+            setAddError('');
+        } catch (error) {
+            console.error('Error adding book to category:', error.response || error);
+            setAddError(error.response?.data?.details || 'נכשל בהוספת ספר לקטגוריה. 😞');
+        } finally {
+            setLoading(false);
         }
-        setLoading(true);
-        axios.delete('/books-for-categories', {
-            data: { book_id: bookId, category_id: selectedCategoryId }
-        })
-        .then(() => {
-            setBooksForCategory(prevBooks => prevBooks.filter(book => book.book_id !== bookId));
-            setRemoveError('');
-            setLoading(false);
-        })
-        .catch(error => {
-            console.error('שגיאה בהסרת ספר מהקטגוריה:', error);
-            setRemoveError(error.response?.data?.details || 'נכשל בהסרת ספר מהקטגוריה. 😞');
-            setLoading(false);
-        });
     };
     
+    const deleteBookFromCategory = async (bookId) => {
+        setLoading(true);
+        try {
+            // Axios DELETE request with data payload
+            await axios.delete('/books-for-categories', {
+                data: { book_id: bookId, category_id: selectedCategoryId }
+            });
+    
+            // Fetch the updated list of books for the selected category
+            const response = await axios.get(`/books-for-categories/${selectedCategoryId}`);
+            setBooksForCategory(response.data.books);  // Update books state
+        } catch (error) {
+            console.error('Error deleting book from category:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const editBook = (bookId) => {
+        // Navigate to a book edit page (assumes a route exists)
+        window.location.href = `/edit-book/${bookId}`;
+    };
+
     return (
         <PageContainer>
             <Header>📚 ניהול ספרים לפי קטגוריה</Header>
-
             {loading && <Loading>טוען...</Loading>}
 
             <SelectContainer>
@@ -91,7 +98,6 @@ const BooksForCategory = () => {
                     id="category-select"
                     value={selectedCategoryId} 
                     onChange={(e) => setSelectedCategoryId(e.target.value)}
-                    aria-label="בחר קטגוריה"
                 >
                     <option value="">בחר קטגוריה</option>
                     {categories.map(category => (
@@ -115,56 +121,37 @@ const BooksForCategory = () => {
                 {addError && <Error>{addError}</Error>}
             </AddBookContainer>
 
-            <CategoryGrid>
-                {categories.length > 0 ? (
-                    categories.map(category => (
-                        <CategoryCard 
-                            key={category.id} 
-                            onClick={() => setSelectedCategoryId(category.id)}
-                            selected={category.id === selectedCategoryId}
-                        >
-                            {category.name}
-                        </CategoryCard>
-                    ))
-                ) : (
-                    <NoCategories>אין קטגוריות זמינות</NoCategories>
-                )}
-            </CategoryGrid>
-
-            <CategoryList>
-                <BooksTitle>📚 ספרים בקטגוריה {selectedCategoryId}</BooksTitle>
-                <BooksListContainer>
-                    <ul>
-                        {booksForCategory.length > 0 ? (
-                            booksForCategory.map(book => (
-                                <BookItem key={book.book_id}>
-                                    <span>מזהה ספר: {book.book_id}</span>
-                                    <RemoveButton onClick={() => removeBookFromCategory(book.book_id)}>
-                                        הסר ❌
-                                    </RemoveButton>
-                                </BookItem>
-                            ))
-                        ) : (
-                            <NoBooks>אין ספרים בקטגוריה זו</NoBooks>
-                        )}
-                    </ul>
-                </BooksListContainer>
-            </CategoryList>
-
-            {removeError && <Error>{removeError}</Error>}
+            <BooksTitle>📚 ספרים בקטגוריה {selectedCategoryId}</BooksTitle>
+            <BooksListContainer>
+                <ul>
+                    {booksForCategory.length > 0 ? (
+                        booksForCategory.map(book => (
+                            <BookItem key={book.id}>
+                                <span>מזהה ספר: {book.id}</span>
+                                <span>כותר: {book.title}</span>
+                                <BookActions>
+                                    <EditButton onClick={() => editBook(book.id)}>ערוך ✏️</EditButton>
+                                    <DeleteButton onClick={() => deleteBookFromCategory(book.id)}>מחק 🗑️</DeleteButton>
+                                </BookActions>
+                            </BookItem>
+                        ))
+                    ) : (
+                        <NoBooks>אין ספרים בקטגוריה זו</NoBooks>
+                    )}
+                </ul>
+            </BooksListContainer>
         </PageContainer>
     );
 };
 
 export default BooksForCategory;
 
-// רכיבים מעוצבים
+// Styled Components
 const PageContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px;
-    font-family: 'Arial', sans-serif;
     max-width: 800px;
     margin: 0 auto;
     background-color: #f4f4f4;
@@ -176,32 +163,21 @@ const Header = styled.h1`
     color: #333;
     text-align: center;
     margin-bottom: 20px;
-    font-size: 24px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 `;
 
 const SelectContainer = styled.div`
     margin-bottom: 20px;
     width: 100%;
-    display: flex;
-    justify-content: center;
 `;
 
 const Label = styled.label`
-    display: block;
     margin-bottom: 10px;
-    font-size: 16px;
-    color: #555;
 `;
 
 const Select = styled.select`
     padding: 10px;
-    font-size: 16px;
-    border-radius: 4px;
-    border: 2px solid #007BFF;
     width: 100%;
     max-width: 300px;
-    background-color: #fff;
 `;
 
 const AddBookContainer = styled.div`
@@ -214,73 +190,27 @@ const AddBookContainer = styled.div`
 
 const Input = styled.input`
     padding: 10px;
-    font-size: 16px;
-    border-radius: 4px;
-    border: 2px solid #007BFF;
     width: 100%;
     max-width: 300px;
-    background-color: #fff;
 `;
 
 const AddButton = styled.button`
     margin-top: 10px;
     padding: 10px 20px;
-    font-size: 16px;
     color: #fff;
     background-color: #007BFF;
-    border: 2px solid #007BFF;
+    border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s, border-color 0.3s;
 
     &:hover {
         background-color: #0056b3;
-        border-color: #0056b3;
     }
 `;
 
 const Error = styled.p`
     color: #dc3545;
     margin-top: 10px;
-    font-size: 14px;
-`;
-
-const Loading = styled.div`
-    color: #007BFF;
-    font-size: 18px;
-    margin-top: 20px;
-`;
-
-const CategoryGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    width: 100%;
-    margin-bottom: 20px;
-`;
-
-const CategoryCard = styled.div`
-    padding: 20px;
-    border: 2px solid #007BFF;
-    border-radius: 8px;
-    background-color: #fff;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    ${({ selected }) => selected && `
-        background-color: #e7f1ff;
-        border-color: #0056b3;
-    `}
-`;
-
-const NoCategories = styled.p`
-    color: #555;
-    font-size: 16px;
-    text-align: center;
-`;
-
-const CategoryList = styled.div`
-    width: 100%;
 `;
 
 const BooksTitle = styled.h2`
@@ -290,8 +220,6 @@ const BooksTitle = styled.h2`
 
 const BooksListContainer = styled.div`
     width: 100%;
-    max-width: 800px;
-    margin-bottom: 20px;
 `;
 
 const BookItem = styled.li`
@@ -304,11 +232,28 @@ const BookItem = styled.li`
     align-items: center;
 `;
 
-const RemoveButton = styled.button`
+const BookActions = styled.div`
+    display: flex;
+    gap: 10px;
+`;
+
+const EditButton = styled.button`
     padding: 5px 10px;
-    font-size: 14px;
-    color: #fff;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #218838;
+    }
+`;
+
+const DeleteButton = styled.button`
+    padding: 5px 10px;
     background-color: #dc3545;
+    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -318,8 +263,11 @@ const RemoveButton = styled.button`
     }
 `;
 
+const Loading = styled.div`
+    color: #007BFF;
+`;
+
 const NoBooks = styled.p`
     color: #555;
-    font-size: 16px;
     text-align: center;
 `;

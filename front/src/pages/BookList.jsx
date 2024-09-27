@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import styled from 'styled-components';
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
@@ -11,7 +12,7 @@ const BookList = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get('/books');
+      const response = await axios.get('/books/GetBooks');
       setBooks(response.data);
     } catch (err) {
       console.error('נכשל בשליפת הספרים:', err);
@@ -21,7 +22,7 @@ const BookList = () => {
   const deleteBook = async (id) => {
     try {
       await axios.delete(`/books/${id}`);
-      fetchBooks(); // רענן את הרשימה לאחר מחיקת הספר
+      fetchBooks(); // Refresh the list after deletion
     } catch (err) {
       console.error('נכשל במחיקת הספר:', err);
     }
@@ -30,6 +31,10 @@ const BookList = () => {
   return (
     <div style={outerContainerStyle}>
       <div style={containerStyle}>
+        <Link to="/adminhome">
+          <HomeButton>🏠 חזור לדף הבית</HomeButton>
+        </Link>
+        <br />
         <Link to="/add" style={addButtonStyle}>➕ הוסף ספר חדש</Link>
         <div style={bookGridStyle}>
           {books.map((book) => (
@@ -42,6 +47,7 @@ const BookList = () => {
                 <p><strong>🖊 מחבר:</strong> {book.author}</p>
                 <p><strong>📅 שנה:</strong> {book.year}</p>
                 <p><strong>📚 סוגה:</strong> {book.genre}</p>
+                <p><strong>זמין:</strong> {book.available ? '✅ כן' : '❌ לא'}</p>
                 <p><strong>🔢 מזהה ספר:</strong> {book.id}</p> {/* Display Book ID */}
                 <div style={bookActionsStyle}>
                   <button style={deleteButtonStyle} onClick={() => deleteBook(book.id)}>❌ מחק</button>
@@ -58,13 +64,29 @@ const BookList = () => {
 
 export default BookList;
 
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
+    }
+`;
+
 // Inline Styles
 const outerContainerStyle = {
   display: 'flex',
   justifyContent: 'center',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   height: '100vh',
-  backgroundColor: '#f4f4f4'
+  backgroundColor: '#f4f4f4',
+  paddingTop: '20px',
 };
 
 const containerStyle = {
@@ -72,12 +94,13 @@ const containerStyle = {
   flexDirection: 'column',
   alignItems: 'center',
   padding: '20px',
+  marginTop: '20px',
   border: '1px solid #ddd',
   borderRadius: '5px',
   backgroundColor: 'white',
   boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-  width: '80%', // Adjust as needed
-  maxWidth: '1200px' // Adjust as needed
+  width: '80%',
+  maxWidth: '1200px',
 };
 
 const addButtonStyle = {
@@ -88,14 +111,14 @@ const addButtonStyle = {
   color: 'white',
   borderRadius: '5px',
   textDecoration: 'none',
-  textAlign: 'center'
+  textAlign: 'center',
 };
 
 const bookGridStyle = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
   gap: '20px',
-  justifyContent: 'center'
+  justifyContent: 'center',
 };
 
 const bookItemStyle = {
@@ -103,21 +126,21 @@ const bookItemStyle = {
   borderRadius: '5px',
   padding: '10px',
   boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-  textAlign: 'center'
+  textAlign: 'center',
 };
 
 const bookImageStyle = {
   width: '100%',
   height: 'auto',
-  borderRadius: '5px'
+  borderRadius: '5px',
 };
 
 const bookDetailsStyle = {
-  marginTop: '10px'
+  marginTop: '10px',
 };
 
 const bookActionsStyle = {
-  marginTop: '10px'
+  marginTop: '10px',
 };
 
 const deleteButtonStyle = {
@@ -127,7 +150,7 @@ const deleteButtonStyle = {
   border: 'none',
   borderRadius: '5px',
   cursor: 'pointer',
-  marginRight: '10px'
+  marginRight: '10px',
 };
 
 const editLinkStyle = {
@@ -135,5 +158,5 @@ const editLinkStyle = {
   backgroundColor: '#4caf50',
   color: 'white',
   borderRadius: '5px',
-  textDecoration: 'none'
+  textDecoration: 'none',
 };

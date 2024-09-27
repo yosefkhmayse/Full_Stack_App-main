@@ -8,19 +8,30 @@ const AddUser = () => {
     const [password, setPassword] = useState('');
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('user');
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        axios.post('/users', { username, password, email, role })
-            .then(() => navigate('/users'))
-            .catch(error => console.error('שגיאה בהוספת משתמש 🛑:', error));
+        setError(null); // Reset error message before submission
+
+        try {
+            await axios.post('/users', { username, password, email, role });
+            navigate('/users'); // Navigate to the users page on success
+        } catch (error) {
+            if (error.response && error.response.data && error.response.data.error) {
+                setError(error.response.data.error); // Display error message from server
+            } else {
+                setError('נכשל בהוספת משתמש. אנא נסה שוב.'); // Generic error message
+            }
+        }
     };
 
     return (
         <PageContainer>
             <ContentBox>
                 <Header>הוסף משתמש חדש 🆕</Header>
+                {error && <ErrorMessage>{error}</ErrorMessage>} {/* Display error message */}
                 <Form onSubmit={handleSubmit}>
                     <Label>
                         שם משתמש 🧑‍💻:
@@ -135,4 +146,9 @@ const SubmitButton = styled.button`
     &:hover {
         background-color: #0088cc;
     }
+`;
+
+const ErrorMessage = styled.p`
+    color: red;
+    text-align: center;
 `;

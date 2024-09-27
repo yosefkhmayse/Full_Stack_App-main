@@ -21,6 +21,9 @@ const UserList = () => {
     return (
         <PageContainer>
             <ContentBox>
+            <Link to="/adminhome">
+                    <HomeButton>🏠 חזור לדף הבית</HomeButton>
+                </Link>
                 <Header>רשימת משתמשים 👥</Header>
                 <AddUserLink to="/add-user">הוסף משתמש חדש ➕</AddUserLink>
                 <Table>
@@ -144,5 +147,19 @@ const DeleteButton = styled.button`
 
     &:hover {
         background-color: #e53935;
+    }
+`;
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
     }
 `;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const AddBook = () => {
   const navigate = useNavigate();
@@ -30,18 +31,21 @@ const AddBook = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-  
+
+    // Log the book state before submission
+    console.log('Submitting book:', book);
+
     const formData = new FormData();
     formData.append('title', book.title);
     formData.append('author', book.author);
-    formData.append('available', book.available);
+    formData.append('available', book.available ? 1 : 0); // Ensure it's 1 or 0
     formData.append('year', book.year);
     formData.append('genre', book.genre);
     formData.append('description', book.description);
     if (book.image) {
       formData.append('image', book.image);
     }
-  
+
     try {
       const response = await axios.post('/books/add', formData, {
         headers: {
@@ -69,6 +73,9 @@ const AddBook = () => {
 
   return (
     <Container>
+      <Link to="/adminhome">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link> <br />
       <Heading>📚 הוסף ספר חדש</Heading>
       <Form onSubmit={handleSubmit}>
         <Label>כותרת:</Label>
@@ -138,6 +145,21 @@ const AddBook = () => {
 };
 
 export default AddBook;
+
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
 
 // Styled Components
 const Container = styled.div`

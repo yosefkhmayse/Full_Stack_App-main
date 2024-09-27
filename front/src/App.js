@@ -31,6 +31,10 @@ import BookListUser from './pages/BookListUser';
 import SearchBooks from './pages/SearchBooks';
 import BookDetails from './pages/BookDetails';
 import UserLoans from './pages/UserLoans'; // Import the UserLoans page
+import DeleteBook from './pages/DeleteBook';
+import EditBookBySearch from './pages/EditBookBySearch';
+import SearchByCategory from './pages/SearchByCategory';
+
 
 // Components
 import Navbar from './components/Navbar';
@@ -99,6 +103,8 @@ const BigAdminLayout = () => {
 
 // Router Setup
 const router = createBrowserRouter([
+  { path: "search-book-by-id", element: <  EditBookBySearch /> },
+  { path: "delete-book", element: <DeleteBook /> },
   { path: "bookdetails/:id", element: <BookDetails /> },
   { path: "search-books", element: <SearchBooks /> },
   { path: "booklist", element: <BookListUser /> },
@@ -122,6 +128,8 @@ const router = createBrowserRouter([
   { path: "admins", element: <AdminList /> },
   { path: "userhome", element: <UserHome /> },
   { path: "userloans", element: <UserLoans /> }, 
+  { path: "search-category", element: < SearchByCategory /> }, 
+ 
   { path: "/",
     element: <Login />,
   },

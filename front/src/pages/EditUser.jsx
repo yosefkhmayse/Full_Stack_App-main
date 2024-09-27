@@ -6,13 +6,22 @@ import styled from 'styled-components';
 const EditUser = () => {
     const { id } = useParams();
     const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         // Fetch user details by ID
-        axios.get(`/users/${id}`)
-            .then(response => setUser(response.data))
-            .catch(error => console.error('שגיאה בהבאת פרטי המשתמש 🛑:', error));
+        const fetchUser = async () => {
+            try {
+                const response = await axios.get(`/users/${id}`);
+                setUser(response.data);
+            } catch (error) {
+                setError('שגיאה בהבאת פרטי המשתמש. אנא נסה שוב.'); // Generic error message
+                console.error('שגיאה בהבאת פרטי המשתמש 🛑:', error);
+            }
+        };
+
+        fetchUser();
     }, [id]);
 
     const handleChange = (e) => {
@@ -25,11 +34,13 @@ const EditUser = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null); // Reset error message before submission
 
         try {
             await axios.put(`/users/${id}`, user);
             navigate('/users');
         } catch (error) {
+            setError('שגיאה בעדכון פרטי המשתמש. אנא נסה שוב.'); // Generic error message
             console.error('שגיאה בעדכון פרטי המשתמש 🛑:', error);
         }
     };
@@ -40,6 +51,7 @@ const EditUser = () => {
         <PageContainer>
             <ContentBox>
                 <Header>עריכת פרטי משתמש ✏️</Header>
+                {error && <ErrorMessage>{error}</ErrorMessage>} {/* Display error message */}
                 <Form onSubmit={handleSubmit}>
                     <Label>
                         שם משתמש 🧑‍💻:
@@ -155,4 +167,9 @@ const SubmitButton = styled.button`
     &:hover {
         background-color: #0088cc;
     }
+`;
+
+const ErrorMessage = styled.p`
+    color: red;
+    text-align: center;
 `;

@@ -1,202 +1,192 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom'; // Import Link for navigation
+import { useUserContext } from '../context/UserContext';
 
 const UserSettings = () => {
+    const { user } = useUserContext(); // Get user from context
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [userName, setUserName] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (newPassword !== confirmPassword) {
-            setError('הסיסמאות אינן תואמות');
+    // Fetch the user's name based on their ID
+    const fetchUserName = useCallback(async () => {
+        if (!user || !user.id) {
+            console.warn('User not identified, skipping name fetch.');
+            setError('חובה להתחבר כדי לראות את השם.');
             return;
         }
 
         try {
-            await axios.post('/users/change-password', {
+            const response = await axios.get(`/users/${user.id}`);
+            console.log('User data fetched:', response.data); // Debugging line
+            setUserName(response.data.username); // Update to 'username'
+        } catch (err) {
+            console.error('Error fetching user name:', err);
+            setError('🚨 שגיאה בקבלת שם המשתמש: ' + (err.response ? err.response.data.error : 'שגיאת שרת'));
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchUserName();
+    }, [fetchUserName]);
+
+    // Handle password change
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+    
+        if (newPassword !== confirmPassword) {
+            setError('הסיסמאות אינן תואמות');
+            return;
+        }
+    
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setError('לא נמצא אסימון אימות.');
+                return;
+            }
+    
+            // Log passwords before sending to the server (for debugging)
+            console.log('Current Password:', currentPassword);
+            console.log('New Password:', newPassword);
+    
+            const response = await axios.post('/users/change-password', {
                 currentPassword,
                 newPassword
             }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                headers: { Authorization: `Bearer ${token}` }
             });
+    
+            console.log('Password change response:', response.data); // Debugging line
             setMessage('הסיסמה שונתה בהצלחה');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
+            setError(''); // Clear the error message
         } catch (err) {
-            setError('שינוי הסיסמה נכשל: ' + (err.response ? err.response.data.error : 'שגיאה בשרת'));
+            console.error('Password change failed:', err);
+            const errorMessage = err.response && err.response.data && err.response.data.error
+                ? err.response.data.error
+                : 'שגיאה בשרת';
+            setError('שינוי הסיסמה נכשל: ' + errorMessage);
         }
     };
-
+    
     return (
-        <Container>
-            <Nav>
-                <NavList>
-                    <NavItem><NavLink to="/adminhome">🏠 דף הבית</NavLink></NavItem>
-                    <NavItem><NavLink to="/books">📚 צפה בספרים</NavLink></NavItem>
-                    <NavItem><NavLink to="/loans">📖 נהל הלוואות</NavLink></NavItem>
-                    <NavItem><NavLink to="/settings">⚙️ הגדרות</NavLink></NavItem>
-                </NavList>
-            </Nav>
-            <MainContent>
-                <Title>🔒 שנה סיסמה</Title>
-                <Form onSubmit={handleSubmit}>
-                    <FormGroup>
-                        <Label>🔑 סיסמה נוכחית:</Label>
-                        <Input
-                            type="password"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            required
-                        />
-                    </FormGroup>
-                    <FormGroup>
-                        <Label>🔐 סיסמה חדשה:</Label>
-                        <Input
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            required
-                        />
-                    </FormGroup>
-                    <FormGroup>
-                        <Label>🔒 אישור סיסמה חדשה:</Label>
-                        <Input
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-                    </FormGroup>
-                    <SubmitButton type="submit">🔄 שנה סיסמה</SubmitButton>
-                    {message && <Message>{message}</Message>}
-                    {error && <Error>{error}</Error>}
-                </Form>
-            </MainContent>
-        </Container>
+        <OuterContainer>
+            <Container>
+            <Link to="/userhome">
+                    <HomeButton>🏠 חזור לדף הבית</HomeButton>
+                </Link>
+                <h1>👤 שלום, {userName || 'טוען...'}!</h1> {/* Display the username */}
+                <h2>🔒 שנה סיסמה</h2>
+                <form onSubmit={handleSubmit}>
+                    <InputGroup>
+                        <label>
+                            סיסמה נוכחית 🔑:
+                            <Input
+                                type="password"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                required
+                            />
+                        </label>
+                    </InputGroup>
+                    <InputGroup>
+                        <label>
+                            סיסמה חדשה 🔐:
+                            <Input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                            />
+                        </label>
+                    </InputGroup>
+                    <InputGroup>
+                        <label>
+                            אשר סיסמה חדשה 🔒:
+                            <Input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                        </label>
+                    </InputGroup>
+                    <Button type="submit">🔄 שנה סיסמה</Button>
+                </form>
+                {message && <Message>{message}</Message>}
+                {error && <ErrorMessage>{error}</ErrorMessage>}
+            </Container>
+        </OuterContainer>
     );
 };
 
 export default UserSettings;
 
-// Styled Components
-const Container = styled.div`
+// Styled Components (Reusing the same as your provided code)
+const OuterContainer = styled.div`
     display: flex;
-    height: 100vh;
-    background-color: #f4f4f4;
-`;
-
-const Nav = styled.nav`
-    width: 250px;
-    background-color: #333;
-    color: white;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+    background-color: #f0f0f0;
+`;
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
+    }
 `;
 
-const NavList = styled.ul`
-    list-style: none;
-    padding: 0;
+const Container = styled.div`
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
     width: 100%;
-`;
-
-const NavItem = styled.li`
-    width: 100%;
-    margin: 10px 0;
     text-align: center;
 `;
 
-const NavLink = styled(Link)`
-    color: #fff;
-    text-decoration: none;
-    font-size: 1.2em;
-    display: block;
-    padding: 10px;
-    border-radius: 5px;
-    background-color: #444;
-
-    &:hover {
-        background-color: #555;
-        text-decoration: underline;
-    }
-`;
-
-const MainContent = styled.div`
-    width: calc(100% - 250px);
-    padding: 20px;
-    background-color: #fff;
+const InputGroup = styled.div`
+    margin-bottom: 15px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-`;
-
-const Title = styled.h1`
-    font-size: 2em;
-    color: #333;
-    margin-bottom: 20px;
-`;
-
-const Form = styled.form`
-    width: 100%;
-    max-width: 500px;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-`;
-
-const FormGroup = styled.div`
-    margin-bottom: 15px;
-`;
-
-const Label = styled.label`
-    display: block;
-    font-size: 1.2em;
-    margin-bottom: 5px;
-    color: #333;
+    text-align: center;
 `;
 
 const Input = styled.input`
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1em;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
 `;
 
-const SubmitButton = styled.button`
-    width: 100%;
-    padding: 12px;
-    background-color: #007bff;
+const Button = styled.button`
+    padding: 10px 15px;
+    background-color: #279af9;
     color: white;
     border: none;
-    border-radius: 8px;
-    font-size: 1.1em;
+    border-radius: 5px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: background-color 0.3s, transform 0.3s;
-
-    &:hover {
-        background-color: #0056b3;
-        transform: translateY(-4px);
-    }
-
-    &:focus {
-        outline: none;
-        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-    }
+    font-size: 16px;
+    margin-top: 10px;
 `;
 
 const Message = styled.p`
@@ -205,7 +195,7 @@ const Message = styled.p`
     margin-top: 10px;
 `;
 
-const Error = styled.p`
+const ErrorMessage = styled.p`
     color: red;
     text-align: center;
     margin-top: 10px;

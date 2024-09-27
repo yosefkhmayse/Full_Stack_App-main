@@ -13,6 +13,7 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault(); // מונע רענון הדף
+        setError(''); // Reset error message before submission
         try {
             await axios.post('/auth/userregister', { username, password, email });
             navigate('/user-login'); // הפניה לדף התחברות לאחר הרשמה מוצלחת

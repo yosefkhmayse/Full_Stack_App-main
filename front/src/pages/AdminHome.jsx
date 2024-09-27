@@ -11,7 +11,7 @@ const AdminHome = () => {
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                const response = await axios.get('/books');
+                const response = await axios.get('/books/GetBooks');
                 const booksData = response.data;
                 setBooks(booksData);
                 fetchRatings(booksData);
@@ -47,7 +47,7 @@ const AdminHome = () => {
                         <LinkStyled to="/delete-book">❌ מחק ספר</LinkStyled>
                     </MenuItem>
                     <MenuItem>
-                        <LinkStyled to="/edit">✏️ ערוך ספר</LinkStyled>
+                        <LinkStyled to="/search-book-by-id">✏️ ערוך ספר</LinkStyled>
                     </MenuItem>
                 </Menu>
             </Sidebar>
@@ -61,7 +61,7 @@ const AdminHome = () => {
                             <BookImage src={book.image} alt={book.title} />
                             <BookDetails>
                                 <BookTitle>{book.title}</BookTitle>
-                                <BookAuthor>מאת {book.author}</BookAuthor>
+                                <p><strong>זמין:</strong> {book.available ? '✅ זמין' : '❌ לא זמין'}</p>
                                 <StarRating rating={ratings[book.id] || 0} onRatingChange={() => {}} />
                             </BookDetails>
                         </BookItem>
@@ -180,9 +180,4 @@ const BookTitle = styled.h2`
     margin: 0;
     font-size: 1.1em;
     color: #333;
-`;
-
-const BookAuthor = styled.p`
-    margin: 0;
-    color: #555;
 `;

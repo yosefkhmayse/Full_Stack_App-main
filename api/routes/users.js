@@ -1,32 +1,35 @@
 import express from 'express';
-import { getUsers, getUserById, addUser, editUser, deleteUser, getUserDetails } from '../controllers/userController.js';
+import { getUsers, getUserById, addUser, editUser, deleteUser, changePassword, getUserDetails } from '../controllers/userController.js';
 import { authenticateToken } from '../middleware/authenticate.js';
 
 const router = express.Router();
 
-// מסלול לקבלת כל המשתמשים
+// Route to get all users
 router.get('/', getUsers);
 
-// מסלול לקבלת משתמש לפי מזהה
+// Route to get user by ID
 router.get('/:id', getUserById);
 
-// מסלול להוספת משתמש חדש
+// Route to add a new user
 router.post('/', addUser);
 
-// מסלול לעריכת משתמש קיים
+// Route to edit an existing user
 router.put('/:id', editUser);
 
-// מסלול לקבלת פרטי משתמש (דורש אימות)
+// Route to change user password (requires authentication)
+router.post('/change-password', authenticateToken, changePassword);
+
+// Route to get user details (requires authentication)
 router.get('/getUserDetails', authenticateToken, (req, res) => {
-  console.log('פרטי המשתמש:', { username: req.user.username, id: req.user.id });
+  console.log('User details:', { username: req.user.username, id: req.user.id });
   res.json({
-    message: 'פרטי המשתמש התקבלו בהצלחה',
+    message: 'User details retrieved successfully',
     username: req.user.username,
     id: req.user.id
   });
 });
 
-// מסלול למחיקת משתמש לפי מזהה
+// Route to delete user by ID
 router.delete('/:id', deleteUser);
 
 export default router;

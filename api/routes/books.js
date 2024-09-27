@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { getBooks, getBook, addBook, deleteBook, updateBook, searchBooks } from '../controllers/bookController.js';
+import { getBooks, getBook, addBook, deleteBook, updateBook, getBookforeditdelete } from '../controllers/bookController.js';
 
 // הגדרת multer להעלאת קבצים
 const storage = multer.diskStorage({
@@ -18,11 +18,11 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 // מסלולי ספרים
-router.get('/', getBooks);
+router.get('/GetBooks/', getBooks);
 router.get('/:id', getBook);
+router.get('/search/:id', getBookforeditdelete);
 router.post('/add', upload.single('image'), addBook);
 router.delete('/:id', deleteBook);
 router.put('/:id', upload.single('image'), updateBook);
-router.get('/search', searchBooks); // מסלול חיפוש
 
 export default router;

@@ -1,3 +1,4 @@
+// Router: booksForCategoriesRouter.js
 import express from 'express';
 const router = express.Router();
 import { 
@@ -10,10 +11,10 @@ import {
 
 // קבלת ספרים לפי קטגוריות
 router.get('/', getBooksForCategories);
-// קבלת קטגוריה לפי מזהה
+// קבלת קטגוריה עם ספרים
 router.get('/:id', getCategoriesWithBooks);
 router.post('/', addBooksForCategory); // הוספת ספר לקטגוריה
 router.put('/:id', editBooksForCategory); // עדכון ספר בקטגוריה
-router.delete('/:id', deleteBooksForCategory); // מחיקת ספר מהקטגוריה
+router.delete('/', deleteBooksForCategory); // מחיקת ספר מהקטגוריה
 
 export default router;

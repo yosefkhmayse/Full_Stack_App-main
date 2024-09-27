@@ -8,55 +8,19 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: 20px;
     background-color: #f4f4f9;
     min-height: 100vh;
 `;
 
-const Nav = styled.nav`
-    width: 100%;
-    background-color: #4CAF50;
-    padding: 10px 20px;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-`;
-
-const NavList = styled.ul`
-    display: flex;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-`;
-
-const NavItem = styled.li`
-    margin: 0 15px;
-`;
-
-const NavLink = styled(Link)`
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    &:hover {
-        text-decoration: underline;
-    }
-`;
-
-const UserInfo = styled.div`
-    display: flex;
-    align-items: center;
-    color: white;
-`;
-
-const UserName = styled.span`
-    margin-right: 10px;
-`;
-
-
 const Main = styled.main`
     text-align: center;
     margin-top: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 `;
 
 const Heading = styled.h1`
@@ -68,28 +32,75 @@ const Heading = styled.h1`
 const Paragraph = styled.p`
     color: #666;
     font-size: 1.2rem;
+    margin-bottom: 20px;
+`;
+
+const ButtonContainer = styled.div`
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* 5 buttons per row */
+    gap: 20px; /* Space between buttons */
+    margin-top: 20px; /* Space above the grid */
+`;
+
+const ButtonBox = styled.div`
+    background-color: #e0e7ff; /* Light blue background */
+    padding: 20px; /* Increased padding for larger boxes */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+    transition: transform 0.3s;
+    display: flex; /* Center content within the box */
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    
+    &:hover {
+        transform: translateY(-3px); /* Lift effect on hover */
+    }
+`;
+
+const StyledLink = styled(Link)`
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #142e99;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    display: block; /* Make the link fill the box */
+    text-align: center; /* Center text */
+    
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
+    }
 `;
 
 const UserHome = () => {
     return (
         <Container>
-            <Nav>
-                <div>
-                <NavItem><NavLink to="/">🔒 התנתק</NavLink></NavItem>
-                </div>
-                <NavList>
-                    <NavItem><NavLink to="/userhome">🏠 דף הבית</NavLink></NavItem>
-                    <NavItem><NavLink to="/booklist">📚 הצג ספרים</NavLink></NavItem>
-                    <NavItem><NavLink to="/userloans">💼 ניהול הלוואות</NavLink></NavItem>
-                    <NavItem><NavLink to="/settings">👤 הפרופיל שלי</NavLink></NavItem>
-                </NavList>
-                <UserInfo>
-                    <UserName>שלום</UserName>
-                </UserInfo>
-            </Nav>
             <Main>
                 <Heading>ברוכים הבאים למערכת ניהול הספריה</Heading>
-                <Paragraph>בחר אפשרות מהתפריט העליון כדי להתחיל.</Paragraph>
+                <Paragraph>בחר אפשרות מהתפריט למטה כדי להתחיל.</Paragraph>
+                <ButtonContainer>
+                <ButtonBox>
+                        <StyledLink to="/">🔒 התנתק</StyledLink>
+                    </ButtonBox>
+                    <ButtonBox>
+                        <StyledLink to="/settings">👤 הפרופיל שלי</StyledLink>
+                    </ButtonBox>
+                    <ButtonBox>
+                        <StyledLink to="/userloans">💼 ניהול הלוואות</StyledLink>
+                    </ButtonBox>
+                     
+                    <ButtonBox>
+                        <StyledLink to="/search-category">🔍 חיפוש קטגוריות</StyledLink>
+                    </ButtonBox>
+                    <ButtonBox>
+                        <StyledLink to="/search-books">🔍 חיפוש ספרים</StyledLink>
+                    </ButtonBox>
+                    <ButtonBox>
+                        <StyledLink to="/booklist">📚 הצג ספרים</StyledLink>
+                    </ButtonBox>
+                </ButtonContainer>
             </Main>
         </Container>
     );

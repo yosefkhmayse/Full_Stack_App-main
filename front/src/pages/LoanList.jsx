@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import moment from 'moment'; // For date formatting
+import styled from 'styled-components';
 
 const LoanList = () => {
     const [loans, setLoans] = useState([]);
@@ -31,11 +32,24 @@ const LoanList = () => {
             .catch(error => console.error('שגיאה במחיקת השאלה:', error));
     };
 
+    // Separate loans into returned and not returned
+    const returnedLoans = loans.filter(loan => loan.returned);
+    const notReturnedLoans = loans.filter(loan => !loan.returned);
+
+    // Sort loans by loaned date
+    returnedLoans.sort((a, b) => new Date(a.loaned_date) - new Date(b.loaned_date));
+    notReturnedLoans.sort((a, b) => new Date(a.loaned_date) - new Date(b.loaned_date));
+
     return (
         <div style={outerContainerStyle}>
             <div style={containerStyle}>
+                 <Link to="/adminhome">
+                    <HomeButton>🏠 חזור לדף הבית</HomeButton>
+                </Link>
                 <h1 style={headerStyle}>רשימת השאלות 📚</h1>
                 <Link to="/add-loan" style={linkStyle}>הוסף השאלה חדשה ➕</Link>
+                
+                <h2>השאלות שהוחזרו ✅</h2>
                 <table style={tableStyle}>
                     <thead>
                         <tr>
@@ -44,19 +58,46 @@ const LoanList = () => {
                             <th>שם משתמש</th>
                             <th>תאריך השאלה 📅</th>
                             <th>תאריך החזרה 📅</th>
-                            <th>הוחזר ✅</th>
                             <th>פעולות ⚙️</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {loans.map(loan => (
+                        {returnedLoans.map(loan => (
                             <tr key={loan.id}>
                                 <td>{loan.book_id}</td>
-                                <td>{loan.user_id}</td> {/* Display User ID */}
-                                <td>{users[loan.user_id] || 'לא נמצא'}</td> {/* Display User Name */}
+                                <td>{loan.user_id}</td>
+                                <td>{users[loan.user_id] || 'לא נמצא'}</td>
+                                <td>{moment(loan.loaned_date).format('DD/MM/YYYY')}</td>
+                                <td>{moment(loan.returned_date).format('DD/MM/YYYY')}</td>
+                                <td>
+                                    <Link to={`/edit-loan/${loan.id}`} style={editButtonStyle}>ערוך ✏️</Link>
+                                    <button onClick={() => deleteLoan(loan.id)} style={deleteButtonStyle}>מחק ❌</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                <h2>השאלות שלא הוחזרו ❌</h2>
+                <table style={tableStyle}>
+                    <thead>
+                        <tr>
+                            <th>מזהה ספר 📖</th>
+                            <th>מזהה משתמש 👤</th>
+                            <th>שם משתמש</th>
+                            <th>תאריך השאלה 📅</th>
+                            <th>תאריך החזרה צפויה 📅</th>
+                            <th>פעולות ⚙️</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {notReturnedLoans.map(loan => (
+                            <tr key={loan.id}>
+                                <td>{loan.book_id}</td>
+                                <td>{loan.user_id}</td>
+                                <td>{users[loan.user_id] || 'לא נמצא'}</td>
                                 <td>{moment(loan.loaned_date).format('DD/MM/YYYY')}</td>
                                 <td>{loan.returned_date ? moment(loan.returned_date).format('DD/MM/YYYY') : 'לא הוחזר עדיין'}</td>
-                                <td>{loan.returned ? 'כן ✅' : 'לא ❌'}</td>
                                 <td>
                                     <Link to={`/edit-loan/${loan.id}`} style={editButtonStyle}>ערוך ✏️</Link>
                                     <button onClick={() => deleteLoan(loan.id)} style={deleteButtonStyle}>מחק ❌</button>
@@ -138,3 +179,18 @@ const deleteButtonStyle = {
     cursor: 'pointer',
     fontSize: '14px'
 };
+const HomeButton = styled.button`
+    padding: 10px 15px;
+    background-color: #142e99;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+
+    &:hover {
+        background-color: #0f1e66; /* Darker shade on hover */
+    }
+`;
+

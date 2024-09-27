@@ -11,7 +11,7 @@ const BookListUser = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await axios.get('/books');
+        const response = await axios.get('/books/GetBooks');
         const booksData = response.data;
         setBooks(booksData);
         fetchRatings(booksData);
@@ -38,6 +38,9 @@ const BookListUser = () => {
 
   return (
     <PageContainer>
+      <Link to="/userhome">
+        <HomeButton>🏠 חזור לדף הבית</HomeButton>
+      </Link>
       <Header>📚 רשימת ספרים</Header>
       <BookGrid>
         {books.map((book) => (
@@ -50,6 +53,7 @@ const BookListUser = () => {
               <p><strong>מחבר:</strong> {book.author}</p>
               <p><strong>שנה:</strong> {book.year}</p>
               <p><strong>סוגה:</strong> {book.genre}</p>
+              <p><strong>זמין:</strong> {book.available ? '✅ זמין' : '❌ לא זמין'}</p> {/* Display availability */}
               <StarRating rating={ratings[book.id] || 0} onRatingChange={() => {}} />
             </BookDetails>
             <BookActions>
@@ -81,6 +85,21 @@ const Header = styled.h1`
   text-align: center;
 `;
 
+const HomeButton = styled.button`
+  padding: 10px 15px;
+  background-color: #142e99;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #0f1e66; /* Darker shade on hover */
+  }
+`;
+
 const BookGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr); /* 5 columns */
@@ -101,7 +120,7 @@ const BookItem = styled.div`
   flex-direction: column; /* Ensure items stack vertically */
   align-items: center; /* Center content horizontally */
   text-align: center; /* Center text within item */
-  
+
   &:hover {
     transform: translateY(-5px);
   }
