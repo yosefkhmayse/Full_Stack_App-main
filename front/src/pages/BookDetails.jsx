@@ -9,70 +9,50 @@ const BookDetails = () => {
   const { id } = useParams(); // Get book ID from URL parameters
   const [book, setBook] = useState(null);
   const [rating, setRating] = useState(0);
+  const [feedback, setFeedback] = useState(''); // State for user feedback input
+  const [feedbackList, setFeedbackList] = useState([]); // Store all feedbacks
   const [error, setError] = useState('');
   const { user } = useUserContext(); // Get user context
 
   // Fetch book details
   const fetchBook = useCallback(async () => {
-    console.log('Fetching book details for ID:', id);
     try {
       const response = await axios.get(`/books/search/${id}`);
-      console.log('Book details retrieved:', response.data);
       setBook(response.data);
     } catch (err) {
-      console.error('Error fetching book details:', err);
       setError('שגיאה בשליפת פרטי הספר. אנא נסה שוב מאוחר יותר.');
     }
   }, [id]);
 
-  // Fetch book rating
-  const fetchRating = useCallback(async () => {
-    console.log('Fetching rating for book ID:', id);
+  // Fetch book rating and feedback
+  const fetchRatingsAndFeedback = useCallback(async () => {
     try {
       const response = await axios.get(`/ratings/${id}`);
-      console.log('Book rating retrieved:', response.data);
-      setRating(response.data.averageRating || 0);
+      setRating(response.data.averageRating || 0); // Set the average rating
+      setFeedbackList(response.data.feedbacks || []); // Set the list of feedbacks
     } catch (err) {
-      console.error('Error fetching rating:', err);
-      setError('שגיאה בשליפת הדירוג. אנא נסה שוב מאוחר יותר.');
+      setError('שגיאה בשליפת הדירוג והמשוב. אנא נסה שוב מאוחר יותר.');
     }
   }, [id]);
 
-  // Fetch book details and rating when component mounts or ID changes
+  // Fetch book details and ratings/feedback when component mounts or ID changes
   useEffect(() => {
     fetchBook();
-    fetchRating();
-  }, [fetchBook, fetchRating]);
+    fetchRatingsAndFeedback(); // Fetch both book and feedback
+  }, [fetchBook, fetchRatingsAndFeedback]);
 
+  // Handle rating and feedback submission
   const handleRating = async (newRating) => {
-    console.log('User context:', user?.id); // Check if user is available and has an ID
-    console.log('Book ID:', id);
-    console.log('New Rating:', newRating);
-
     if (!user || !user.id) {
-      console.error('Error: User is not authenticated or missing ID.');
       setError('חובה להתחבר כדי להוסיף דירוג.');
       return;
     }
-
-    if (!id) {
-      console.error('Error: Missing book ID.');
-      setError('חובה לספק מזהה ספר.');
-      return;
-    }
-
-    if (newRating === undefined || newRating === null || isNaN(newRating)) {
-      console.error('Error: Invalid rating value.');
-      setError('חובה לספק דירוג תקין.');
-      return;
-    }
-
-    console.log('Sending rating update:', { bookId: id, userId: user.id, rating: newRating });
 
     try {
       const response = await axios.post('/ratings', {
         bookId: id,
         rating: newRating,
+        feedback // Include the feedback
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -80,17 +60,15 @@ const BookDetails = () => {
       });
 
       if (response.status === 200) {
-        console.log('Rating set successfully.');
-        fetchRating(); // Refresh rating after update
-        setError(''); // Clear error message on success
+        fetchRatingsAndFeedback(); // Refresh ratings and feedback after submission
+        setFeedback(''); // Clear feedback input
+        setError(''); // Clear any errors
       } else {
-        console.error('Unexpected response status:', response.status);
         setError('שגיאה בהגדרת הדירוג. אנא נסה שוב מאוחר יותר.');
       }
     } catch (error) {
-      console.error('Error setting rating:', error.response?.data || error.message);
       const errorMessage = error.response?.data?.error || 'שגיאה בהגדרת הדירוג. אנא נסה שוב מאוחר יותר.';
-      setError(errorMessage); // Show detailed error message
+      setError(errorMessage);
     }
   };
 
@@ -104,13 +82,36 @@ const BookDetails = () => {
       <BookInfo><strong>שנה:</strong> {book.year}</BookInfo>
       <BookDescription><strong>תיאור:</strong> {book.description}</BookDescription>
       <Availability available={book.available}>
-                         {book.available ? '✅ זמין' : '❌ לא זמין'}
-                     </Availability>
+        {book.available ? '✅ זמין' : '❌ לא זמין'}
+      </Availability>
+
       <BookRating>
         <strong>דירוג נוכחי:</strong>
         <StarRating rating={rating} onRatingChange={handleRating} />
+        <FeedbackInput
+          placeholder="כתוב משוב על הספר"
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+        />
+        <SubmitButton onClick={() => handleRating(rating)}>שלח דירוג ומשוב</SubmitButton>
       </BookRating>
-      {error && <ErrorMessage>{error}</ErrorMessage>} {/* Show error message */}
+
+      {/* Display all user feedback */}
+      <FeedbackList>
+        {feedbackList.length > 0 ? (
+          feedbackList.map((item, index) => (
+            <FeedbackItem key={index}>
+              <strong>משתמש:</strong> {item.username} <br />
+              <strong>דירוג:</strong> {item.rating} <br />
+              <strong>משוב:</strong> {item.feedback}
+            </FeedbackItem>
+          ))
+        ) : (
+          <p>אין משובים על הספר הזה עדיין.</p>
+        )}
+      </FeedbackList>
+
+      {error && <ErrorMessage>{error}</ErrorMessage>}
     </BookDetailsContainer>
   );
 };
@@ -121,47 +122,79 @@ export default BookDetails;
 const BookDetailsContainer = styled.div`
   padding: 20px;
   max-width: 800px;
-  margin: 40px auto; /* Center and add space at the top */
+  margin: 40px auto;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center content horizontally */
-`;
-const Availability = styled.p`
-    color: ${props => (props.available ? '#388e3c' : '#d32f2f')};
-    font-weight: bold;
+  align-items: center;
 `;
 
 const BookImage = styled.img`
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  margin-bottom: 20px; /* Space below image */
+  margin-bottom: 20px;
 `;
 
 const BookTitle = styled.h1`
   font-size: 2em;
   margin: 20px 0;
-  text-align: center; /* Center title */
+  text-align: center;
 `;
 
 const BookInfo = styled.p`
   font-size: 1.2em;
   margin: 10px 0;
-  text-align: center; /* Center text */
+  text-align: center;
 `;
 
 const BookDescription = styled.p`
   font-size: 1em;
   margin: 20px 0;
-  text-align: center; /* Center text */
+  text-align: center;
+`;
+
+const Availability = styled.p`
+  color: ${props => (props.available ? '#388e3c' : '#d32f2f')};
+  font-weight: bold;
 `;
 
 const BookRating = styled.div`
   margin: 20px 0;
-  text-align: center; /* Center rating */
+  text-align: center;
+`;
+
+const FeedbackInput = styled.textarea`
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+`;
+
+const SubmitButton = styled.button`
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+`;
+
+const FeedbackList = styled.div`
+  margin-top: 20px;
+  width: 100%;
+`;
+
+const FeedbackItem = styled.div`
+  background-color: #f1f1f1;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 `;
 
 const LoadingMessage = styled.div`
@@ -174,5 +207,5 @@ const ErrorMessage = styled.div`
   color: red;
   font-size: 1.2em;
   margin: 20px;
-  text-align: center; /* Center error message */
+  text-align: center;
 `;
