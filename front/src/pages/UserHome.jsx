@@ -88,7 +88,7 @@ const UserHome = () => {
                         <StyledLink to="/settings">👤 הפרופיל שלי</StyledLink>
                     </ButtonBox>
                     <ButtonBox>
-                        <StyledLink to="/userloans">💼 ניהול הלוואות</StyledLink>
+                        <StyledLink to="/userloans">💼 ניהול השאלות</StyledLink>
                     </ButtonBox>
                      
                     <ButtonBox>
