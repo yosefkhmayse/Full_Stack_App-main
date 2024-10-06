@@ -43,11 +43,14 @@ const BookList = () => {
                 <img src={book.image} alt={book.title} style={bookImageStyle} />
               )}
               <div style={bookDetailsStyle}>
+
                 <p><strong>📖 כותרת:</strong> {book.title}</p>
                 <p><strong>🖊 מחבר:</strong> {book.author}</p>
                 <p><strong>📅 שנה:</strong> {book.year}</p>
-                <p><strong>📚 סוגה:</strong> {book.genre}</p>
-                <p><strong>זמין:</strong> {book.available ? '✅ כן' : '❌ לא'}</p>
+                  <p><strong>זמין:</strong> {book.available ? '✅ כן' : '❌ לא'}</p>
+                <p><strong>📚 תיאור:</strong> {book.description}</p>
+                <p><strong>📚 סוג:</strong> {book.genre}</p>
+              
                 <p><strong>🔢 מזהה ספר:</strong> {book.id}</p> {/* Display Book ID */}
                 <div style={bookActionsStyle}>
                   <button style={deleteButtonStyle} onClick={() => deleteBook(book.id)}>❌ מחק</button>
@@ -116,10 +119,11 @@ const addButtonStyle = {
 
 const bookGridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+  gridTemplateColumns: 'repeat(5, 1fr)',
   gap: '20px',
   justifyContent: 'center',
 };
+
 
 const bookItemStyle = {
   border: '1px solid #ddd',
@@ -128,6 +132,7 @@ const bookItemStyle = {
   boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
   textAlign: 'center',
 };
+
 
 const bookImageStyle = {
   width: '100%',
